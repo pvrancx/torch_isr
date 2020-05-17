@@ -8,7 +8,7 @@ from pytorch_lightning.core.lightning import LightningModule
 
 class LightningIsr(LightningModule):
     def __init__(self, model_factory: Callable[[Any], nn.Module], hparams=None):
-        super().__init__()
+        super(LightningIsr, self).__init__()
         self.hparams = hparams
 
         self.model = model_factory(**hparams)
@@ -42,7 +42,7 @@ class LightningIsr(LightningModule):
         x, y = batch
         y_hat = self(x)
         mse = F.mse_loss(y_hat, y)
-        psnr = 10 * torch.log10(1. / mse).item()
+        psnr = 10 * torch.log10(1. / mse)
         return {'test_loss': mse, 'test_psnr': psnr}
 
     def test_epoch_end(self, outputs):
@@ -55,22 +55,4 @@ class LightningIsr(LightningModule):
                 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.001)
-
-    # def prepare_data(self):
-    #     self.mnist_train = MNIST(os.getcwd(), train=True, download=True,
-    #                              transform=transforms.ToTensor())
-    #     self.mnist_test = MNIST(os.getcwd(), train=False, download=True,
-    #                             transform=transforms.ToTensor())
-    #
-    # def train_dataloader(self):
-    #     loader = DataLoader(self.mnist_train, batch_size=32, num_workers=4)
-    #     return loader
-    #
-    # def val_dataloader(self):
-    #     loader = DataLoader(self.mnist_test, batch_size=32, num_workers=4)
-    #     return loader
-    #
-    # def test_dataloader(self):
-    #     loader = DataLoader(self.mnist_test, batch_size=32, num_workers=4)
-    #     return loader
+        return torch.optim.Adam(self.parameters(), lr=0.01)

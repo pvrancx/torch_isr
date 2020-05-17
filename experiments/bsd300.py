@@ -8,7 +8,7 @@ from isr.lightning_model import LightningIsr
 from isr.models.srcnn import SrCnn
 
 
-def main():
+def main(scale_factor=2):
     bsd300_train = load_bsd300('../data', split='train')
     bsd300_test = load_bsd300('../data', split='test')
 
@@ -22,7 +22,7 @@ def main():
     train_data = IsrDataset(
         bsd300_train,
         output_size=200,
-        scale_factor=2,
+        scale_factor=scale_factor,
         deterministic=False,
         transform=train_transforms,
         target_transform=transforms.ToTensor()
@@ -33,17 +33,17 @@ def main():
     test_data = IsrDataset(
         bsd300_test,
         output_size=200,
-        scale_factor=2,
+        scale_factor=scale_factor,
         deterministic=True,
         transform=test_transforms,
         target_transform=transforms.ToTensor()
     )
 
-    model = LightningIsr(SrCnn, {})
+    model = LightningIsr(SrCnn, {'scale_factor': scale_factor})
     trainer = Trainer()
     trainer.fit(
         model,
-        train_dataloader=DataLoader(train_data, shuffle=True, batch_size=32, num_workers=2),
+        train_dataloader=DataLoader(test_data, shuffle=True, batch_size=32, num_workers=2),
         val_dataloaders=DataLoader(val_data, shuffle=False, batch_size=32, num_workers=2),
     )
     trainer.test(
@@ -53,7 +53,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(4)
 
 
 

@@ -76,22 +76,3 @@ class IsrDataset(VisionDataset):
             img = self.transform(img)
         return img, target
 
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    def _main():
-        bsd300 = load_bsd300('../datasets')
-        print(bsd300.images)
-        dataset = IsrDataset(bsd300, 200, 2, transform=transforms.ToTensor(),
-                             target_transform=transforms.ToTensor())
-
-        img, target = dataset[0]
-        plt.figure()
-        plt.imshow(np.transpose(img.numpy(), [1,2,0]))
-        plt.figure()
-        plt.imshow(np.transpose(target.numpy(), [1,2,0]))
-        plt.show()
-    _main()
-
