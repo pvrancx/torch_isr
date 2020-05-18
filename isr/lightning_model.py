@@ -4,19 +4,21 @@ import torch
 from torch.nn import functional as F
 from torch import nn
 from pytorch_lightning.core.lightning import LightningModule
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 _default_params = {
     'momentum': 0.9,
     'learning_rate': 1e-3,
-    'weight_decay': 1e-5,
+    'weight_decay': 1e-6,
     'model_params': {}
 }
 
 
 class LightningIsr(LightningModule):
-    def __init__(self, model_factory: Callable[[Any], nn.Module], hparams=None):
+    def __init__(self, model_factory: Callable[[Any], nn.Module],
+                 hparams=None):
         super(LightningIsr, self).__init__()
-        params = _default_params
+        params = _default_params.copy()
         params.update(hparams)
         self.hparams = params
 
@@ -64,9 +66,11 @@ class LightningIsr(LightningModule):
                 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        return torch.optim.SGD(
+        optim = torch.optim.SGD(
             self.parameters(),
             lr=self.hparams['learning_rate'],
             momentum=self.hparams['momentum'],
             weight_decay=self.hparams['weight_decay']
         )
+        scheduler = ReduceLROnPlateau(optim)
+        return [optim], [scheduler]
