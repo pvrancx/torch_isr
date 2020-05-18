@@ -5,6 +5,12 @@ from pytorch_lightning.core.lightning import LightningModule
 from torch.nn import functional as F
 
 
+def psnr(batch1, batch2):
+    reduce_dims = torch.arange(1, batch1.ndim, dtype=torch.int).tolist()
+    mse = torch.mean((batch1 - batch2) ** 2, dim=reduce_dims)
+    return torch.mean(10 * torch.log10(1. / mse))
+
+
 class LightningIsr(LightningModule):
     def __init__(self, hparams):
         super(LightningIsr, self).__init__()
@@ -34,8 +40,7 @@ class LightningIsr(LightningModule):
         x, y = batch
         y_hat = self(x)
         mse = F.mse_loss(y_hat, y)
-        psnr = 10 * torch.log10(1. / mse)
-        return {'val_loss': mse, 'val_psnr': psnr}
+        return {'val_loss': mse, 'val_psnr': psnr(y_hat, y)}
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
@@ -49,8 +54,7 @@ class LightningIsr(LightningModule):
         x, y = batch
         y_hat = self(x)
         mse = F.mse_loss(y_hat, y)
-        psnr = 10 * torch.log10(1. / mse)
-        return {'test_loss': mse, 'test_psnr': psnr}
+        return {'test_loss': mse, 'test_psnr': psnr(y_hat, y)}
 
     def test_epoch_end(self, outputs):
         avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()

@@ -16,10 +16,8 @@ def train(args):
     img_transforms = transforms.Compose([
         transforms.RandomHorizontalFlip(),
         transforms.RandomRotation(15),
-        transforms.ToTensor()
     ])
 
-    test_transforms = transforms.ToTensor()
     train_data = IsrDataset(
         bsd300_train,
         output_size=200,
