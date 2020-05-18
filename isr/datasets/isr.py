@@ -43,6 +43,7 @@ class IsrDataset(VisionDataset):
             output_size: Union[int, Tuple[int, int]],
             scale_factor: int = 2,
             deterministic: bool = False,
+            base_image_transform=None,
             transform=None,
             target_transform=None
     ):
@@ -59,6 +60,7 @@ class IsrDataset(VisionDataset):
             raise RuntimeError('Invalid output size')
 
         self._dataset = wrapped_dataset
+        self.base_img_transform = base_image_transform
         self._crop = CenterCrop(size=output_size) if deterministic else RandomCrop(size=output_size)
         self._scaler = Resize(size=input_size)
 
@@ -67,6 +69,9 @@ class IsrDataset(VisionDataset):
 
     def __getitem__(self, item):
         base_img = self._dataset[item][0]
+        if self.base_img_transform is not None:
+            base_img = self.base_img_transform(base_img)
+
         target = self._crop(base_img)
         img = self._scaler(target)
 

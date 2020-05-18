@@ -6,7 +6,6 @@ from torchvision.transforms import transforms
 
 from isr.datasets.bsd import load_bsd300
 from isr.datasets.isr import IsrDataset
-from isr.models.lightning_model import LightningIsr
 from isr.models.srcnn import SrCnn
 
 
@@ -14,7 +13,7 @@ def train(args):
     bsd300_train = load_bsd300('../data', split='train')
     bsd300_test = load_bsd300('../data', split='test')
 
-    train_transforms = transforms.Compose([
+    img_transforms = transforms.Compose([
         transforms.RandomHorizontalFlip(),
         transforms.RandomRotation(15),
         transforms.ToTensor()
@@ -26,7 +25,8 @@ def train(args):
         output_size=200,
         scale_factor=args.scale_factor,
         deterministic=False,
-        transform=train_transforms,
+        base_image_transform=img_transforms,
+        transform=transforms.ToTensor(),
         target_transform=transforms.ToTensor()
     )
     n_train = int(len(train_data) * 0.8)
@@ -37,7 +37,7 @@ def train(args):
         output_size=200,
         scale_factor=args.scale_factor,
         deterministic=True,
-        transform=test_transforms,
+        transform=transforms.ToTensor(),
         target_transform=transforms.ToTensor()
     )
 
