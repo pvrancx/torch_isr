@@ -13,34 +13,41 @@ class SrCnn(LightningIsr):
     """
     def __init__(self, hparams):
         super(SrCnn, self).__init__(hparams=hparams)
-        self.conv1 = nn.Conv2d(self.hparams.num_channels,
-                               self.hparams.layer_1_filters,
-                               kernel_size=self.hparams.layer_1_kernel,
-                               padding=self.hparams.layer_1_kernel // 2
-                               )
-        self.conv2 = nn.Conv2d(self.hparams.layer_1_filters,
-                               self.hparams.layer_2_filters,
-                               kernel_size=self.hparams.layer_2_kernel,
-                               padding=self.hparams.layer_2_kernel // 2
-                               )
-        self.conv3 = nn.Conv2d(self.hparams.layer_2_filters,
-                               self.hparams.num_channels,
-                               kernel_size=self.hparams.layer_3_kernel,
-                               padding=self.hparams.layer_3_kernel // 2
-                               )
-        self.relu = nn.ReLU(inplace=True)
+        self.model = nn.Sequential(
+            nn.Conv2d(
+                in_channels=self.hparams.num_channels,
+                out_channels=self.hparams.layer_1_filters,
+                kernel_size=self.hparams.layer_1_kernel,
+                stride=1,
+                padding=self.hparams.layer_1_kernel // 2
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=self.hparams.layer_1_filters,
+                out_channels=self.hparams.layer_2_filters,
+                kernel_size=self.hparams.layer_2_kernel,
+                stride=1,
+                padding=self.hparams.layer_2_kernel // 2
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=self.hparams.layer_2_filters,
+                out_channels=self.hparams.num_channels,
+                kernel_size=self.hparams.layer_3_kernel,
+                stride=1,
+                padding=self.hparams.layer_3_kernel // 2
+            ),
+            nn.ReLU(),
+        )
 
     def forward(self, x):
-        x = F.interpolate(
+        scaled = F.interpolate(
             x,
             scale_factor=self.hparams.scale_factor,
             align_corners=False,
             mode=self.hparams.upscale_mode
         )
-        x = self.relu(self.conv1(x))
-        x = self.relu(self.conv2(x))
-        x = self.relu(self.conv3(x))
-        return torch.clamp(x, 0., 1.)
+        return torch.clamp(self.model(scaled), 0., 1.)
 
     def configure_optimizers(self):
         optim = torch.optim.SGD(
