@@ -8,6 +8,7 @@ from isr.models.lightning_model import LightningIsr
 
 class SrCnn(LightningIsr):
     """
+    Super resolution CNN
     https://arxiv.org/pdf/1501.00092.pdf
     """
     def __init__(self, hparams):

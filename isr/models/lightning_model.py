@@ -24,7 +24,10 @@ class LightningIsr(LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = F.mse_loss(y_hat, y)
-        tensorboard_logs = {'train_loss': loss}
+
+        current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]
+        tensorboard_logs = {'train_loss': loss, 'lr': current_lr}
+
         return {'loss': loss, 'log': tensorboard_logs}
 
     def validation_step(self, batch, batch_idx):
