@@ -1,14 +1,16 @@
+from argparse import ArgumentParser
+
 from pytorch_lightning import Trainer
 from torch.utils.data import random_split, DataLoader
 from torchvision.transforms import transforms
 
 from isr.datasets.bsd import load_bsd300
 from isr.datasets.isr import IsrDataset
-from isr.lightning_model import LightningIsr
+from isr.models.lightning_model import LightningIsr
 from isr.models.srcnn import SrCnn
 
 
-def main(scale_factor=2):
+def train(args):
     bsd300_train = load_bsd300('../data', split='train')
     bsd300_test = load_bsd300('../data', split='test')
 
@@ -22,7 +24,7 @@ def main(scale_factor=2):
     train_data = IsrDataset(
         bsd300_train,
         output_size=200,
-        scale_factor=scale_factor,
+        scale_factor=args.scale_factor,
         deterministic=False,
         transform=train_transforms,
         target_transform=transforms.ToTensor()
@@ -33,13 +35,13 @@ def main(scale_factor=2):
     test_data = IsrDataset(
         bsd300_test,
         output_size=200,
-        scale_factor=scale_factor,
+        scale_factor=args.scale_factor,
         deterministic=True,
         transform=test_transforms,
         target_transform=transforms.ToTensor()
     )
 
-    model = LightningIsr(SrCnn, {'scale_factor': scale_factor})
+    model = SrCnn(hparams=args)
     trainer = Trainer()
     trainer.fit(
         model,
@@ -53,7 +55,25 @@ def main(scale_factor=2):
 
 
 if __name__ == '__main__':
-    main(4)
+    def _main():
+        parser = ArgumentParser()
+        parser = Trainer.add_argparse_args(parser)
+
+        # figure out which model to use
+        parser.add_argument('--model_name', type=str, default='SrCnn', help='model name')
+
+        temp_args, _ = parser.parse_known_args()
+
+        # let the model add what it wants
+        if temp_args.model_name == 'SrCnn':
+            parser = SrCnn.add_model_specific_args(parser)
+        else:
+            raise RuntimeError('Unknown model')
+
+        args = parser.parse_args()
+        train(args)
+
+    _main()
 
 
 

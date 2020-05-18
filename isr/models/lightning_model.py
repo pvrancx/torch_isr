@@ -1,31 +1,24 @@
-from typing import Callable, Any
+from argparse import ArgumentParser
 
 import torch
-from torch.nn import functional as F
-from torch import nn
 from pytorch_lightning.core.lightning import LightningModule
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-
-_default_params = {
-    'momentum': 0.9,
-    'learning_rate': 1e-3,
-    'weight_decay': 1e-6,
-    'model_params': {}
-}
+from torch.nn import functional as F
 
 
 class LightningIsr(LightningModule):
-    def __init__(self, model_factory: Callable[[Any], nn.Module],
-                 hparams=None):
+    def __init__(self, hparams):
         super(LightningIsr, self).__init__()
-        params = _default_params.copy()
-        params.update(hparams)
-        self.hparams = params
+        self.hparams = hparams
 
-        self.model = model_factory(**hparams['model_params'])
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+        parser.add_argument('--learning_rate', type=float, default=0.002)
+        parser.add_argument('--momentum', type=float, default=0.9)
+        parser.add_argument('--weight_decay', type=float, default=0.)
 
-    def forward(self, x):
-        return self.model(x)
+        parser.add_argument('--scale_factor', type=int, default=2)
+        return parser
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -64,13 +57,3 @@ class LightningIsr(LightningModule):
         return {'test_loss': avg_loss,
                 'test_psnr': avg_psnr,
                 'log': tensorboard_logs}
-
-    def configure_optimizers(self):
-        optim = torch.optim.SGD(
-            self.parameters(),
-            lr=self.hparams['learning_rate'],
-            momentum=self.hparams['momentum'],
-            weight_decay=self.hparams['weight_decay']
-        )
-        scheduler = ReduceLROnPlateau(optim)
-        return [optim], [scheduler]
