@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -13,7 +14,7 @@ class SrCnn(nn.Module):
             layer_1_filters: int = 64,
             layer_2_filters: int = 32,
             layer_1_kernel: int = 9,
-            layer_2_kernel: int = 5,
+            layer_2_kernel: int = 1,
             layer_3_kernel: int = 5
 
     ):
@@ -37,8 +38,8 @@ class SrCnn(nn.Module):
         self.scale_factor = scale_factor
 
     def forward(self, x):
-        x = F.interpolate(x, scale_factor=self.scale_factor, mode='bilinear')
+        x = F.interpolate(x, scale_factor=self.scale_factor, align_corners=False, mode='bicubic')
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
-        x = self.conv3(x)
-        return x
+        x = self.relu(self.conv3(x))
+        return torch.clamp(x, 0., 1.)
