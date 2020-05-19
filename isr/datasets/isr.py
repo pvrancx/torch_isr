@@ -12,14 +12,15 @@ class ImagesFromFolder(VisionDataset):
     Loads images from folder to create dataset. Input and target are equal to loaded image
     (possibly with different transforms applied).
     """
-    def __init__(self, root: str, transform=None, target_transform=None):
+    def __init__(self, root: str, transform=None, target_transform=None, image_mode: str = 'RGB'):
         super(ImagesFromFolder, self).__init__(root,
                                                transform=transform,
                                                target_transform=target_transform)
         self.images = [os.path.join(root, x) for x in os.listdir(root) if is_image_file(x)]
+        self.mode = image_mode
 
     def __getitem__(self, index):
-        img = Image.open(self.images[index]).convert('RGB')
+        img = Image.open(self.images[index]).convert(self.mode)
         target = img.copy()
         if self.transform:
             img = self.transform(img)
