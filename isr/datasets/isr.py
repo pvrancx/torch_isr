@@ -6,7 +6,7 @@ from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
 from torchvision.transforms import RandomCrop, Resize, CenterCrop
 
-_PIL_IMAGE_MODES_ = ('L', 'F', 'I', 'HSV', 'LAB' 'RGB', 'YCbCr', 'CMYK', 'RGBA', '1')
+_PIL_IMAGE_MODES_ = ('L', 'F', 'I', 'HSV', 'LAB', 'RGB', 'YCbCr', 'CMYK', 'RGBA', '1')
 
 
 class ImagesFromFolder(VisionDataset):
