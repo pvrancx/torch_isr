@@ -5,7 +5,14 @@ from torchvision.datasets.voc import download_extract
 from isr.datasets.isr import ImagesFromFolder
 
 
-def load_bsd300(root, download=True, split: str = 'train', transform=None, target_transform=None):
+def load_bsd300(
+        root: str,
+        download: bool = True,
+        split: str = 'train',
+        image_mode: str = 'RGB',
+        transform=None,
+        target_transform=None
+):
     assert split.lower() in ['train', 'test'], 'unknown dataset split'
 
     bsd_root = os.path.join(root, "BSDS300")
@@ -21,4 +28,4 @@ def load_bsd300(root, download=True, split: str = 'train', transform=None, targe
 
     split_dir = os.path.join(image_dir, split)
 
-    return ImagesFromFolder(split_dir, transform, target_transform)
+    return ImagesFromFolder(split_dir, transform, target_transform, image_mode=image_mode)

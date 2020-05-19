@@ -4,7 +4,9 @@ from typing import Tuple, Union
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
-from torchvision.transforms import RandomCrop, Resize, CenterCrop, transforms
+from torchvision.transforms import RandomCrop, Resize, CenterCrop
+
+_PIL_IMAGE_MODES_ = ('L', 'F', 'I', 'HSV', 'LAB' 'RGB', 'YCbCr', 'CMYK', 'RGBA', '1')
 
 
 class ImagesFromFolder(VisionDataset):
@@ -16,6 +18,10 @@ class ImagesFromFolder(VisionDataset):
         super(ImagesFromFolder, self).__init__(root,
                                                transform=transform,
                                                target_transform=target_transform)
+
+        assert image_mode in _PIL_IMAGE_MODES_, 'Unknown PIL image mode.'
+        assert os.path.isdir(root), 'Image folder not found.'
+
         self.images = [os.path.join(root, x) for x in os.listdir(root) if is_image_file(x)]
         self.mode = image_mode
 
