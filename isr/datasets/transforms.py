@@ -6,7 +6,7 @@ class ChannelSelect:
     """
 
     def __init__(self, channel_idx: int = 0):
-        assert 0 < channel_idx < 5, 'Channel index must be int in [0, 1, 2, 3]'
+        assert 0 <= channel_idx <= 4, 'Channel index must be int in [0, 1, 2, 3]'
         self.channel_idx = channel_idx
 
     def __call__(self, img):
