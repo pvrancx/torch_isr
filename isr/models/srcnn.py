@@ -50,10 +50,9 @@ class SrCnn(LightningIsr):
         return torch.clamp(self.model(scaled), 0., 1.)
 
     def configure_optimizers(self):
-        optim = torch.optim.SGD(
+        optim = torch.optim.Adam(
             self.parameters(),
             lr=self.hparams.learning_rate,
-            momentum=self.hparams.momentum,
             weight_decay=self.hparams.weight_decay
         )
         scheduler = {
@@ -76,3 +75,69 @@ class SrCnn(LightningIsr):
         parser.add_argument('--upscale_mode', type=str, default='bicubic')
 
         return parser
+
+
+class SubPixelSrCnn(LightningIsr):
+    def __init__(self, hparams):
+        super(SubPixelSrCnn, self).__init__(hparams)
+
+        self.model = nn.Sequential(
+            nn.Conv2d(
+                in_channels=self.hparams.num_channels,
+                out_channels=self.hparams.layer_1_filters,
+                kernel_size=self.hparams.layer_1_kernel,
+                stride=1,
+                padding=self.hparams.layer_1_kernel // 2
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=self.hparams.layer_1_filters,
+                out_channels=self.hparams.layer_2_filters,
+                kernel_size=self.hparams.layer_2_kernel,
+                stride=1,
+                padding=self.hparams.layer_2_kernel // 2
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=self.hparams.layer_2_filters,
+                out_channels=self.hparams.layer_3_filters,
+                kernel_size=self.hparams.layer_3_kernel,
+                stride=1,
+                padding=self.hparams.layer_3_kernel // 2
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=self.hparams.layer_3_filters,
+                out_channels=self.hparams.num_channels * hparams.scale_factor ** 2,
+                kernel_size=self.hparams.layer_4_kernel,
+                stride=1,
+                padding=self.hparams.layer_4_kernel // 2
+            ),
+            nn.ReLU(),
+            nn.PixelShuffle(hparams.scale_factor)
+        )
+
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = LightningIsr.add_model_specific_args(parent_parser)
+        parser.add_argument('--num_channels', type=int, default=3)
+        parser.add_argument('--layer_1_filters', type=int, default=64)
+        parser.add_argument('--layer_2_filters', type=int, default=64)
+        parser.add_argument('--layer_3_filters', type=int, default=32)
+        parser.add_argument('--layer_1_kernel', type=int, default=5)
+        parser.add_argument('--layer_2_kernel', type=int, default=3)
+        parser.add_argument('--layer_3_kernel', type=int, default=3)
+        parser.add_argument('--layer_4_kernel', type=int, default=3)
+
+        return parser
+
+    def forward(self, x):
+        return torch.clamp(self.model(x), 0., 1.)
+
+    def configure_optimizers(self):
+        optim = torch.optim.Adam(
+            self.parameters(),
+            lr=self.hparams.learning_rate,
+            weight_decay=self.hparams.weight_decay
+        )
+        return optim
