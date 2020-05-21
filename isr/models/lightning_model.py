@@ -16,6 +16,10 @@ class LightningIsr(LightningModule):
         super(LightningIsr, self).__init__()
         self.hparams = hparams
 
+    @property
+    def scale_factor(self) -> int:
+        return self.hparams.scale_factor
+
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
