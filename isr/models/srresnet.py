@@ -45,7 +45,7 @@ class _ResNetModule(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=9, stride=4, padding=1)
         self.prelu = nn.PReLU(out_channels)
 
-        self.resnet = nn.Sequential(*[_ResidualBlock(in_channels, out_channels)
+        self.resnet = nn.Sequential(*[_ResidualBlock(out_channels, out_channels)
                                       for _ in range(n_blocks)])
 
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
