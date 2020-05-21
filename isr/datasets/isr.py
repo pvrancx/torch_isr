@@ -1,10 +1,11 @@
 import os
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import is_image_file
-from torchvision.transforms import RandomCrop, Resize, CenterCrop
+from torchvision.transforms import RandomCrop, CenterCrop
+from torchvision.transforms.functional import resize
 
 _PIL_IMAGE_MODES_ = ('L', 'F', 'I', 'HSV', 'LAB', 'RGB', 'YCbCr', 'CMYK', 'RGBA', '1')
 
@@ -47,9 +48,10 @@ class IsrDataset(VisionDataset):
     def __init__(
             self,
             wrapped_dataset: VisionDataset,
-            output_size: Union[int, Tuple[int, int]],
             scale_factor: int = 2,
+            output_size: Optional[Union[int, Tuple[int, int]]] = None,
             deterministic: bool = False,
+            scale_mode: int = Image.BICUBIC,
             base_image_transform=None,
             transform=None,
             target_transform=None
@@ -59,17 +61,21 @@ class IsrDataset(VisionDataset):
                                          target_transform=target_transform)
 
         assert scale_factor > 1, 'scale factor must be >=  2'
-        if isinstance(output_size, tuple):
-            input_size = (output_size[0] // scale_factor, output_size[1] // scale_factor)
-        elif isinstance(output_size, int):
-            input_size = (output_size // scale_factor, output_size // scale_factor)
-        else:
-            raise RuntimeError('Invalid output size')
-
+        self.scale_factor = scale_factor
+        self.scale_mode = scale_mode
         self._dataset = wrapped_dataset
         self.base_img_transform = base_image_transform
-        self._crop = CenterCrop(size=output_size) if deterministic else RandomCrop(size=output_size)
-        self._scaler = Resize(size=input_size)
+
+        if output_size is None:
+            self._crop = None
+        elif deterministic:
+            self._crop = CenterCrop(size=output_size)
+        else:
+            self._crop = RandomCrop(size=output_size)
+
+    def _scale(self, img: Image) -> Image:
+        width, height = img.size[0] // self.scale_factor, img.size[1] // self.scale_factor
+        return resize(img, (height, width), self.scale_mode)
 
     def __len__(self):
         return len(self._dataset)
@@ -79,8 +85,8 @@ class IsrDataset(VisionDataset):
         if self.base_img_transform is not None:
             base_img = self.base_img_transform(base_img)
 
-        target = self._crop(base_img)
-        img = self._scaler(target)
+        target = self._crop(base_img) if self._crop else base_img
+        img = self._scale(target)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
