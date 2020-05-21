@@ -12,7 +12,7 @@ def super_resolve_ycbcr(model: LightningIsr, img: Image) -> Image:
     to_tensor = ToTensor()
     to_img = ToPILImage(mode='L')
 
-    model_input = to_tensor(y).view(1, -1, y.size[0], y.size[1])
+    model_input = to_tensor(y).view(1, -1, y.size[1], y.size[0])  # PIL size is (width, height)
     model_output = model(model_input)[0].cpu().detach() * 255.
 
     y_scaled = to_img(model_output.type(torch.uint8))
@@ -29,7 +29,7 @@ def super_resolve_rgb(model: LightningIsr, img: Image) -> Image:
     to_tensor = ToTensor()
     to_img = ToPILImage(mode='RGB')
 
-    model_input = to_tensor(img_rgb).view(1, -1, img.size[0], img.size[1])
+    model_input = to_tensor(img_rgb).view(1, -1, img.size[1], img.size[0])
     model_output = model(model_input)[0].cpu().detach() * 255.
 
     return to_img(model_output.type(torch.uint8))
