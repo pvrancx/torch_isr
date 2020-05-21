@@ -6,7 +6,7 @@ from torchvision.transforms import transforms
 
 from isr.datasets.bsd import load_bsd300
 from isr.datasets.isr import IsrDataset
-from isr.models.srcnn import SrCnn
+from isr.models.srcnn import SrCnn, SubPixelSrCnn
 
 
 def train(args):
@@ -39,7 +39,7 @@ def train(args):
         target_transform=transforms.ToTensor()
     )
 
-    model = SrCnn(hparams=args)
+    model = SubPixelSrCnn(hparams=args)
     trainer = Trainer()
     trainer.fit(
         model,
@@ -58,13 +58,15 @@ if __name__ == '__main__':
         parser = Trainer.add_argparse_args(parser)
 
         # figure out which model to use
-        parser.add_argument('--model_name', type=str, default='SrCnn', help='model name')
+        parser.add_argument('--model_name', type=str, default='SubPixelSrCnn', help='model name')
 
         temp_args, _ = parser.parse_known_args()
 
         # let the model add what it wants
         if temp_args.model_name == 'SrCnn':
             parser = SrCnn.add_model_specific_args(parser)
+        elif temp_args.model_name == 'SubPixelSrCnn':
+            parser = SubPixelSrCnn.add_model_specific_args(parser)
         else:
             raise RuntimeError('Unknown model')
 
