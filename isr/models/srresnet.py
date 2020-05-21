@@ -42,7 +42,7 @@ class _SubPixelBlock(nn.Module):
 class _ResNetModule(nn.Module):
     def __init__(self, in_channels: int = 64, out_channels: int = 64, n_blocks: int = 5):
         super(_ResNetModule, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=9, stride=4, padding=4)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=9, stride=1, padding=4)
         self.prelu = nn.PReLU(out_channels)
 
         self.resnet = nn.Sequential(*[_ResidualBlock(out_channels, out_channels)
