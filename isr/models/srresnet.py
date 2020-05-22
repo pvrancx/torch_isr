@@ -62,6 +62,9 @@ class _ResNetModule(nn.Module):
 
 
 class SrResNet(LightningIsr):
+    """
+    https://arxiv.org/pdf/1609.04802.pdf
+    """
     def __init__(self, hparams):
 
         super(SrResNet, self).__init__(hparams)
@@ -94,7 +97,6 @@ class SrResNet(LightningIsr):
             weight_decay=self.hparams.weight_decay
         )
         return optim
-
 
 
 
