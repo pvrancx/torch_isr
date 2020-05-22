@@ -1,3 +1,5 @@
+from argparse import ArgumentParser
+
 import torch
 from PIL import Image
 from torchvision.transforms import ToTensor, ToPILImage
@@ -33,3 +35,33 @@ def super_resolve_rgb(model: LightningIsr, img: Image) -> Image:
     model_output = model(model_input)[0].cpu().detach() * 255.
 
     return to_img(model_output.type(torch.uint8))
+
+
+def _main():
+    parser = ArgumentParser(description='Super Resolution')
+
+    parser.add_argument('input_image', type=str, help='input image')
+    parser.add_argument('--model', type=str, required=True, help='type of model to use')
+    parser.add_argument('--checkpoint', type=str, required=True, help='model checkpoint to use')
+    parser.add_argument('--output_filename', type=str, default='out.png',
+                        help='where to save the output image')
+
+    args = parser.parse_args()
+
+    img = Image.open(args.input_image)
+    module = __import__('isr.models', fromlist=[args.model])
+    model_class = getattr(module, args.model)
+    model = model_class.load_from_checkpoint(args.checkpoint)
+
+    if model.hparams.in_channels == 3:
+        out = super_resolve_rgb(model, img)
+    elif model.hparams.in_channels == 1:
+        out = super_resolve_ycbcr(model, img)
+    else:
+        raise RuntimeError('Unknown image mode: '+args.mode)
+
+    out.save(args.output_filename)
+
+
+if __name__ == '__main__':
+    _main()
