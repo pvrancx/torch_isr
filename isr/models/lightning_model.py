@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 import torch
+import torchvision
 from pytorch_lightning.core.lightning import LightningModule
 from torch.nn import functional as F
 
@@ -35,8 +36,7 @@ class LightningIsr(LightningModule):
         y_hat = self(x)
         loss = F.mse_loss(y_hat, y)
 
-        current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]
-        tensorboard_logs = {'train_loss': loss, 'lr': current_lr}
+        tensorboard_logs = {'train_loss': loss}
 
         return {'loss': loss, 'log': tensorboard_logs}
 
@@ -68,3 +68,12 @@ class LightningIsr(LightningModule):
         return {'test_loss': avg_loss,
                 'test_psnr': avg_psnr,
                 'log': tensorboard_logs}
+
+    def on_epoch_end(self) -> None:
+        sample_input = self.trainer.validation_dataloader[-1]
+        y_hat = self(sample_input)
+        grid = torchvision.utils.make_grid(y_hat)
+        self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
+
+        current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]
+        self.logger.experiment.add_scalar(f'learning_rate', current_lr, self.current_epoch)
