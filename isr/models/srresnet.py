@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 
@@ -5,13 +7,13 @@ from isr.models.lightning_model import LightningIsr
 
 
 class _ResidualBlock(nn.Module):
-    def __init__(self, in_channels: int = 3, out_channels: int = 64):
+    def __init__(self, n_channels: int = 64):
         super(_ResidualBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm2d(out_channels)
-        self.prelu = nn.PReLU(out_channels)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
-        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.conv1 = nn.Conv2d(n_channels, n_channels, kernel_size=3, stride=1, padding=1)
+        self.bn1 = nn.BatchNorm2d(n_channels)
+        self.prelu = nn.PReLU(n_channels)
+        self.conv2 = nn.Conv2d(n_channels, n_channels, kernel_size=3, stride=1, padding=1)
+        self.bn2 = nn.BatchNorm2d(n_channels)
 
     def forward(self, x):
         hid = self.conv1(x)
@@ -45,20 +47,35 @@ class _ResNetModule(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=9, stride=1, padding=4)
         self.prelu = nn.PReLU(out_channels)
 
-        self.resnet = nn.Sequential(*[_ResidualBlock(out_channels, out_channels)
-                                      for _ in range(n_blocks)])
+        self.resnet = nn.Sequential(*[_ResidualBlock(out_channels) for _ in range(n_blocks)])
 
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
         self.bn = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
         inp = self.prelu(self.conv1(x))
-
         hid = self.resnet(inp)
-
         out = self.bn(self.conv2(hid))
 
         return torch.add(inp, out)
+
+
+class _ScaleModule(nn.Module):
+    def __init__(self, in_channels: int = 64, out_channels: int = 64, scales: List[int] = None):
+        super(_ScaleModule, self).__init__()
+
+        scales = scales or [2, 2]
+        channels = in_channels
+
+        layers = []
+        for scale in scales:
+            layers.append(_SubPixelBlock(channels, out_channels, scale))
+            channels = out_channels
+
+        self.model = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.model(x)
 
 
 class SrResNet(LightningIsr):
@@ -69,17 +86,29 @@ class SrResNet(LightningIsr):
 
         super(SrResNet, self).__init__(hparams)
         self.resnet = _ResNetModule(hparams.in_channels, hparams.hid_channels, hparams.n_blocks)
-        self.scaler1 = _SubPixelBlock(hparams.hid_channels, hparams.hid_channels, 2)
-        self.scaler2 = _SubPixelBlock(hparams.hid_channels, hparams.hid_channels, 2)
+
+        # attempt to scale up in multiple steps
+        scales = self._compute_scale_steps(hparams.scale_factor)
+
+        self.scaler = _ScaleModule(hparams.hid_channels, hparams.hid_channels, scales)
         self.conv = nn.Conv2d(
             hparams.hid_channels, hparams.in_channels, kernel_size=9, stride=1, padding=4
         )
 
+    @staticmethod
+    def _compute_scale_steps(scale_factor: int):
+        scales = []
+        scale_factor = scale_factor
+        while scale_factor % 2 == 0 and scale_factor > 2:
+            scales.append(2)
+            scale_factor = scale_factor // 2
+        scales.append(scale_factor)
+        return scales
+
     def forward(self, x):
         hid = self.resnet(x)
-        upscale1 = self.scaler1(hid)
-        upscale2 = self.scaler2(upscale1)
-        out = self.conv(upscale2)
+        upscale = self.scaler(hid)
+        out = self.conv(upscale)
         return torch.clamp(out, 0., 1.)
 
     @staticmethod
@@ -97,9 +126,6 @@ class SrResNet(LightningIsr):
             weight_decay=self.hparams.weight_decay
         )
         return optim
-
-
-
 
 
 
