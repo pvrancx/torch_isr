@@ -71,7 +71,7 @@ class LightningIsr(LightningModule):
                 'log': tensorboard_logs}
 
     def on_epoch_end(self) -> None:
-        sample_input = self.trainer.validation_dataloader[-1]
+        sample_input = self.trainer.val_dataloaders[-1]
         y_hat = self(sample_input)
         grid = torchvision.utils.make_grid(y_hat)
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
