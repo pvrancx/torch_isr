@@ -2,6 +2,7 @@ from typing import List
 
 import torch
 import torch.nn as nn
+from torch.optim.lr_scheduler import MultiStepLR
 
 from isr.models.lightning_model import LightningIsr
 
@@ -117,6 +118,7 @@ class SrResNet(LightningIsr):
         parser.add_argument('--in_channels', type=int, default=3)
         parser.add_argument('--hid_channels', type=int, default=64)
         parser.add_argument('--n_blocks', type=int, default=5)
+
         return parser
 
     def configure_optimizers(self):
@@ -125,7 +127,8 @@ class SrResNet(LightningIsr):
             lr=self.hparams.learning_rate,
             weight_decay=self.hparams.weight_decay
         )
-        return optim
+        scheduler = MultiStepLR(optim, milestones=[self.hparams.max_epochs // 2])
+        return [optim], [scheduler]
 
 
 
