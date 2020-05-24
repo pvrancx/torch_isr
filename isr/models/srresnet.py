@@ -127,7 +127,7 @@ class SrResNet(LightningIsr):
             lr=self.hparams.learning_rate,
             weight_decay=self.hparams.weight_decay
         )
-        scheduler = MultiStepLR(optim, milestones=[self.hparams.max_epochs // 2])
+        scheduler = MultiStepLR(optim, milestones=[self.hparams.lr_epochs // 2])
         return [optim], [scheduler]
 
 
