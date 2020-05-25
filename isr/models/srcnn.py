@@ -15,7 +15,7 @@ class SrCnn(LightningIsr):
         super(SrCnn, self).__init__(hparams=hparams)
         self.model = nn.Sequential(
             nn.Conv2d(
-                in_channels=self.hparams.num_channels,
+                in_channels=self.in_channels,
                 out_channels=self.hparams.layer_1_filters,
                 kernel_size=self.hparams.layer_1_kernel,
                 stride=1,
@@ -32,7 +32,7 @@ class SrCnn(LightningIsr):
             nn.ReLU(),
             nn.Conv2d(
                 in_channels=self.hparams.layer_2_filters,
-                out_channels=self.hparams.num_channels,
+                out_channels=self.in_channels,
                 kernel_size=self.hparams.layer_3_kernel,
                 stride=1,
                 padding=self.hparams.layer_3_kernel // 2
@@ -66,7 +66,6 @@ class SrCnn(LightningIsr):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = LightningIsr.add_model_specific_args(parent_parser)
-        parser.add_argument('--num_channels', type=int, default=3)
         parser.add_argument('--layer_1_filters', type=int, default=64)
         parser.add_argument('--layer_2_filters', type=int, default=32)
         parser.add_argument('--layer_1_kernel', type=int, default=9)
@@ -83,7 +82,7 @@ class SubPixelSrCnn(LightningIsr):
 
         self.model = nn.Sequential(
             nn.Conv2d(
-                in_channels=self.hparams.num_channels,
+                in_channels=self.in_channels,
                 out_channels=self.hparams.layer_1_filters,
                 kernel_size=self.hparams.layer_1_kernel,
                 stride=1,
@@ -108,7 +107,7 @@ class SubPixelSrCnn(LightningIsr):
             nn.ReLU(),
             nn.Conv2d(
                 in_channels=self.hparams.layer_3_filters,
-                out_channels=self.hparams.num_channels * hparams.scale_factor ** 2,
+                out_channels=self.in_channels * hparams.scale_factor ** 2,
                 kernel_size=self.hparams.layer_4_kernel,
                 stride=1,
                 padding=self.hparams.layer_4_kernel // 2
@@ -120,7 +119,6 @@ class SubPixelSrCnn(LightningIsr):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = LightningIsr.add_model_specific_args(parent_parser)
-        parser.add_argument('--num_channels', type=int, default=3)
         parser.add_argument('--layer_1_filters', type=int, default=64)
         parser.add_argument('--layer_2_filters', type=int, default=64)
         parser.add_argument('--layer_3_filters', type=int, default=32)

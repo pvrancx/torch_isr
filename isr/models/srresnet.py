@@ -86,14 +86,14 @@ class SrResNet(LightningIsr):
     def __init__(self, hparams):
 
         super(SrResNet, self).__init__(hparams)
-        self.resnet = _ResNetModule(hparams.in_channels, hparams.hid_channels, hparams.n_blocks)
+        self.resnet = _ResNetModule(self.in_channels, hparams.hid_channels, hparams.n_blocks)
 
         # attempt to scale up in multiple steps
         scales = self._compute_scale_steps(hparams.scale_factor)
 
         self.scaler = _ScaleModule(hparams.hid_channels, hparams.hid_channels, scales)
         self.conv = nn.Conv2d(
-            hparams.hid_channels, hparams.in_channels, kernel_size=9, stride=1, padding=4
+            hparams.hid_channels, self.in_channels, kernel_size=9, stride=1, padding=4
         )
 
     @staticmethod
@@ -115,7 +115,6 @@ class SrResNet(LightningIsr):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = LightningIsr.add_model_specific_args(parent_parser)
-        parser.add_argument('--in_channels', type=int, default=3)
         parser.add_argument('--hid_channels', type=int, default=64)
         parser.add_argument('--n_blocks', type=int, default=5)
 

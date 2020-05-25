@@ -16,6 +16,7 @@ class LightningIsr(LightningModule):
     def __init__(self, hparams):
         super(LightningIsr, self).__init__()
         self.hparams = hparams
+        self.in_channels = 3 if hparams.img_mode == 'RGB' else 1
 
     @property
     def scale_factor(self) -> int:
@@ -24,6 +25,8 @@ class LightningIsr(LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
+        parser.add_argument('--img_mode', type=str, default='RGB', choices=['RGB', 'yCbCr'])
+
         parser.add_argument('--learning_rate', type=float, default=0.002)
         parser.add_argument('--momentum', type=float, default=0.9)
         parser.add_argument('--weight_decay', type=float, default=0.)
@@ -76,7 +79,7 @@ class LightningIsr(LightningModule):
             sample_input = sample_input.cuda()
         y_hat = self(sample_input)
         idx = min(4, y_hat.size(0))
-        grid = torchvision.utils.make_grid(y_hat[idx])
+        grid = torchvision.utils.make_grid([y_hat[i] for i in range(idx)])
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
         current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]
