@@ -54,5 +54,5 @@ python super_resolve.py --model SrResNet --checkpoint trained_models/srresnet4x.
 ```
 
 <p>
-  <img src='train_models/example.png' width='700'/>
+  <img src='trained_models/example.png' width='800'/>
 </p>
