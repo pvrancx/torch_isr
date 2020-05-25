@@ -41,10 +41,14 @@ def _main():
     parser = ArgumentParser(description='Super Resolution')
 
     parser.add_argument('input_image', type=str, help='input image')
-    parser.add_argument('--model', type=str, required=True, help='type of model to use')
-    parser.add_argument('--checkpoint', type=str, required=True, help='model checkpoint to use')
+    parser.add_argument('--model', type=str,
+                        choices=['SrResNet', 'SrCnn', 'SubPixelSrCnn'],
+                        required=True,
+                        help='type of ISR model to use')
+    parser.add_argument('--checkpoint', type=str, required=True,
+                        help='saved model checkpoint to use')
     parser.add_argument('--output_filename', type=str, default='out.png',
-                        help='where to save the output image')
+                        help='output image name (default: out.png)')
 
     args = parser.parse_args()
 
