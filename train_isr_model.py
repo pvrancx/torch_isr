@@ -2,6 +2,8 @@ from argparse import ArgumentParser
 
 from pytorch_lightning import Trainer
 
+from isr.models import SrCnn
+
 
 def main():
     parser = ArgumentParser(description='Train Image Super Resolution model')
@@ -16,7 +18,7 @@ def main():
     module = __import__('isr.models', fromlist=[temp_args.model_type])
     model_class = getattr(module, temp_args.model_type)
 
-    parser = model_class.add_model_specific_args(parser)
+    parser = SrCnn.add_model_specific_args(parser)
     args = parser.parse_args()
 
     trainer = Trainer.from_argparse_args(args)

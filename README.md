@@ -14,6 +14,18 @@ positional arguments:
 
 optional arguments:
   -h, --help            show help message and exit
+  --img_mode {RGB,yCbCr}
+                        image mode used by model
+  --learning_rate LEARNING_RATE
+                        base learning rate
+  --lr_epochs LR_EPOCHS
+                        epochs over which to decay learning_rate
+  --batch_size BATCH_SIZE
+                        default train batch size
+  --scale_factor SCALE_FACTOR
+                        model upscale factor
+  --weight_decay WEIGHT_DECAY
+                        weight decay penalty (default=0)
 
  use --help to list other optional arguments
 

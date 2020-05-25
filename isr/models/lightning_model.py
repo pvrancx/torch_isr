@@ -31,14 +31,20 @@ class LightningIsr(LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--img_mode', type=str, default='RGB', choices=['RGB', 'yCbCr'])
+        parser.add_argument(
+            '--img_mode',
+            type=str, default='RGB', choices=['RGB', 'yCbCr'],
+            help='image mode used by model'
+        )
 
-        parser.add_argument('--learning_rate', type=float, default=0.002)
+        parser.add_argument('--learning_rate', type=float, default=0.002, help='base learning rate')
         parser.add_argument('--momentum', type=float, default=0.9)
-        parser.add_argument('--weight_decay', type=float, default=0.)
-        parser.add_argument('--lr_epochs', type=int, default=1000)
-        parser.add_argument('--batch_size', type=int, default=32)
-        parser.add_argument('--scale_factor', type=int, default=2)
+        parser.add_argument('--weight_decay', type=float, default=0.,
+                            help='weight decay penalty (default=0)')
+        parser.add_argument('--lr_epochs', type=int, default=1000,
+                            help='epochs over which to decay learning_rate')
+        parser.add_argument('--batch_size', type=int, default=32, help='default train batch size')
+        parser.add_argument('--scale_factor', type=int, default=2, help='model upscale factor')
         return parser
 
     def training_step(self, batch, batch_idx):
