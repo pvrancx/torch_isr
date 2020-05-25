@@ -1,9 +1,15 @@
+import os
 from argparse import ArgumentParser
 
 import torch
 import torchvision
 from pytorch_lightning.core.lightning import LightningModule
 from torch.nn import functional as F
+from torch.utils.data import DataLoader
+from torchvision.transforms import transforms
+
+from isr.datasets.isr import IsrDataset
+from isr.datasets.srsets import load_set5, load_set14
 
 
 def psnr(batch1, batch2):
@@ -31,7 +37,7 @@ class LightningIsr(LightningModule):
         parser.add_argument('--momentum', type=float, default=0.9)
         parser.add_argument('--weight_decay', type=float, default=0.)
         parser.add_argument('--lr_epochs', type=int, default=1000)
-
+        parser.add_argument('--batch_size', type=int, default=32)
         parser.add_argument('--scale_factor', type=int, default=2)
         return parser
 
@@ -72,6 +78,39 @@ class LightningIsr(LightningModule):
         return {'test_loss': avg_loss,
                 'test_psnr': avg_psnr,
                 'log': tensorboard_logs}
+
+    def train_dataloader(self):
+        set5 = IsrDataset(
+            load_set5(os.getcwd(), download=True, image_mode=self.hparams.img_mode),
+            deterministic=False,
+            output_size=8 * self.hparams.scale_factor,
+            scale_factor=self.hparams.scale_factor,
+            transform=transforms.ToTensor(),
+            target_transform=transforms.ToTensor()
+        )
+        return DataLoader(set5, batch_size=self.hparams.batch_size)
+
+    def val_dataloader(self):
+        set5 = IsrDataset(
+            load_set5(os.getcwd(), download=True, image_mode=self.hparams.img_mode),
+            deterministic=True,
+            output_size=228,
+            scale_factor=self.hparams.scale_factor,
+            transform=transforms.ToTensor(),
+            target_transform=transforms.ToTensor()
+        )
+        return DataLoader(set5, batch_size=self.hparams.batch_size)
+
+    def test_dataloader(self):
+        set14 = IsrDataset(
+            load_set14(os.getcwd(), download=True, image_mode=self.hparams.img_mode),
+            deterministic=True,
+            output_size=250,
+            scale_factor=self.hparams.scale_factor,
+            transform=transforms.ToTensor(),
+            target_transform=transforms.ToTensor()
+        )
+        return DataLoader(set14, batch_size=1)
 
     def on_epoch_end(self) -> None:
         sample_input, _ = next(iter(self.trainer.val_dataloaders[-1]))

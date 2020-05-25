@@ -38,7 +38,7 @@ def super_resolve_rgb(model: LightningIsr, img: Image) -> Image:
 
 
 def _main():
-    parser = ArgumentParser(description='Super Resolution')
+    parser = ArgumentParser(description='Image Super Resolution')
 
     parser.add_argument('input_image', type=str, help='input image')
     parser.add_argument('--model', type=str,

@@ -2,6 +2,28 @@
 PyTorch models for Image Super Resolution
 
 ## Usage
+### Training
+```
+usage: train_isr_model.py [Optional Arguments] {SrResNet,SrCnn,SubPixelSrCnn}
+
+Train Image Super Resolution model
+
+positional arguments:
+  {SrResNet,SrCnn,SubPixelSrCnn}
+                        type of ISR model to train
+
+optional arguments:
+  -h, --help            show help message and exit
+
+ use --help to list other optional arguments
+
+```
+
+Example usage:
+
+```
+python train_isr_model.py --gpus 1 --max_epochs 1000 SrCnn
+```
 ### Running
 ```
 usage: super_resolve.py [-h] --model MODEL --checkpoint CHECKPOINT

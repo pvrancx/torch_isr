@@ -1,3 +1,6 @@
+Pillow
 pytorch_lightning
+tesnorboard
+tensorboardX
 torch
 torchvision
