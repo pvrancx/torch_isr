@@ -66,6 +66,9 @@ class SrCnn(LightningIsr):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = LightningIsr.add_model_specific_args(parent_parser)
+        parser.add_argument('--learning_rate', type=float, default=0.002, help='base learning rate')
+        parser.add_argument('--weight_decay', type=float, default=0.,
+                            help='weight decay penalty (default=0)')
         parser.add_argument('--layer_1_filters', type=int, default=64)
         parser.add_argument('--layer_2_filters', type=int, default=32)
         parser.add_argument('--layer_1_kernel', type=int, default=9)
@@ -119,6 +122,9 @@ class SubPixelSrCnn(LightningIsr):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = LightningIsr.add_model_specific_args(parent_parser)
+        parser.add_argument('--learning_rate', type=float, default=0.002, help='base learning rate')
+        parser.add_argument('--weight_decay', type=float, default=0.,
+                            help='weight decay penalty (default=0)')
         parser.add_argument('--layer_1_filters', type=int, default=64)
         parser.add_argument('--layer_2_filters', type=int, default=64)
         parser.add_argument('--layer_3_filters', type=int, default=32)

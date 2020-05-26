@@ -115,9 +115,13 @@ class SrResNet(LightningIsr):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = LightningIsr.add_model_specific_args(parent_parser)
+        parser.add_argument('--learning_rate', type=float, default=0.002, help='base learning rate')
+        parser.add_argument('--weight_decay', type=float, default=0.,
+                            help='weight decay penalty (default=0)')
         parser.add_argument('--hid_channels', type=int, default=64)
         parser.add_argument('--n_blocks', type=int, default=5)
-
+        parser.add_argument('--b1', type=float, default=0.9)
+        parser.add_argument('--b2', type=float, default=0.999)
         return parser
 
     def configure_optimizers(self):

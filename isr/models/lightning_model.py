@@ -28,6 +28,9 @@ class LightningIsr(LightningModule):
     def scale_factor(self) -> int:
         return self.hparams.scale_factor
 
+    def configure_optimizers(self):
+        raise NotImplementedError()
+
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
@@ -37,10 +40,6 @@ class LightningIsr(LightningModule):
             help='image mode used by model'
         )
 
-        parser.add_argument('--learning_rate', type=float, default=0.002, help='base learning rate')
-        parser.add_argument('--momentum', type=float, default=0.9)
-        parser.add_argument('--weight_decay', type=float, default=0.,
-                            help='weight decay penalty (default=0)')
         parser.add_argument('--lr_epochs', type=int, default=1000,
                             help='epochs over which to decay learning_rate')
         parser.add_argument('--batch_size', type=int, default=32, help='default train batch size')
