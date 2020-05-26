@@ -135,6 +135,3 @@ class SrResNet(LightningIsr):
             milestones=[self.hparams.lr_epochs // 2, 3 * (self.hparams.lr_epochs // 4)]
         )
         return [optim], [scheduler]
-
-
-
