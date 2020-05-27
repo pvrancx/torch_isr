@@ -133,7 +133,7 @@ class SrGan(LightningIsr):
         # train generator
         if optimizer_idx == 0:
             # generate images
-            self.generated_imgs = self(lr_imgs)
+            generated_imgs = self(lr_imgs)
 
             # ground truth result (ie: all fake)
             # put on GPU because we created this tensor inside training_loop
@@ -142,7 +142,7 @@ class SrGan(LightningIsr):
                 valid = valid.cuda(lr_imgs.device.index)
 
             # adversarial loss is binary cross-entropy
-            g_loss = self.adversarial_loss(self.discriminator(self.generated_imgs), valid)
+            g_loss = self.adversarial_loss(self.discriminator(generated_imgs), valid)
             tqdm_dict = {'g_loss': g_loss}
             output = OrderedDict({
                 'loss': g_loss,
