@@ -79,8 +79,7 @@ class Discriminator(LightningModule):
 
     def validation_step(self, val_batch, batch_idx):
         x, y = val_batch
-        logits = self.forward(x)
-        loss = self.loss(logits, y)
+        loss = self.loss(self(x), y)
         return {'val_loss': loss}
 
     def validation_epoch_end(self, outputs):
@@ -117,7 +116,7 @@ class SrGan(LightningIsr):
     def add_model_specific_args(parent_parser):
         parser = Discriminator.add_model_specific_args(parent_parser)
         parser = SrResNet.add_model_specific_args(parser)
-
+        parser.add_argument('--adv_weight', type=float, default=1e-2)
         return parser
 
     def forward(self, z):
@@ -142,8 +141,10 @@ class SrGan(LightningIsr):
                 valid = valid.cuda(lr_imgs.device.index)
 
             # adversarial loss is binary cross-entropy
-            g_loss = self.adversarial_loss(self.discriminator(generated_imgs), valid)
-            tqdm_dict = {'g_loss': g_loss}
+            pixel_loss = self.pixel_loss(generated_imgs, hr_imgs)
+            g_adv_loss = self.adversarial_loss(self.discriminator(generated_imgs), valid)
+            g_loss = pixel_loss + self.hparams.adv_weight * g_adv_loss
+            tqdm_dict = {'g_loss': g_loss, 'g_adv_loss': g_adv_loss, 'g_pixel_loss': pixel_loss}
             output = OrderedDict({
                 'loss': g_loss,
                 'progress_bar': tqdm_dict,

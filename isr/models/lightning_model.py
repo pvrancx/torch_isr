@@ -31,6 +31,9 @@ class LightningIsr(LightningModule):
     def configure_optimizers(self):
         raise NotImplementedError()
 
+    def pixel_loss(self, y_hat, y):
+        return F.mse_loss(y_hat, y)
+
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
