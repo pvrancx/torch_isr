@@ -89,7 +89,7 @@ class Discriminator(LightningModule):
         return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
