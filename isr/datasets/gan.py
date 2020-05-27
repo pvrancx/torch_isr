@@ -29,7 +29,7 @@ class DiscriminatorDataset(VisionDataset):
         lr_img, hr_img = self._dataset[item]
 
         if random() < 0.5:
-            img = self._generator(lr_img)[0]
+            img = self._generator(lr_img.view((1,) + lr_img.shape))[0]
             target = 0
         else:
             img = hr_img
