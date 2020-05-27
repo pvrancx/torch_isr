@@ -30,10 +30,10 @@ class DiscriminatorDataset(VisionDataset):
 
         if random() < 0.5:
             img = self._generator(lr_img.view((1,) + lr_img.shape))[0]
-            target = 0
+            target = 0.
         else:
             img = hr_img
-            target = 1
+            target = 1.
 
         if self.target_transform is not None:
             target = self.target_transform(target)
