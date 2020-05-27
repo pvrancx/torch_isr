@@ -180,7 +180,7 @@ class SrGan(LightningIsr):
             return output
 
     def configure_optimizers(self):
-        opt_g, = self.generator.configure_optimizers()
+        opt_g, _ = self.generator.configure_optimizers()
         opt_d = self.discriminator.configure_optimizers()
         return [opt_g[-1], opt_d], []
 
