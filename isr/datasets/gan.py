@@ -30,11 +30,11 @@ class DiscriminatorDataset(VisionDataset):
         lr_img, hr_img = self._dataset[item]
 
         if random() < 0.5:
-            img = self._generator(lr_img.view((1,) + lr_img.shape))[0]
-            target = torch.zeros(1)
+            img = self._generator(lr_img.view((1,) + lr_img.shape))[0].detach()
+            target = torch.zeros(1, dtype=img.dtype)
         else:
             img = hr_img
-            target = torch.ones(1)
+            target = torch.ones(1, dtype=img.dtype)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
