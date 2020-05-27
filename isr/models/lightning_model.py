@@ -46,7 +46,7 @@ class LightningIsr(LightningModule):
         parser.add_argument('--scale_factor', type=int, default=2, help='model upscale factor')
         return parser
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx, opt_ind):
         x, y = batch
         y_hat = self(x)
         loss = F.mse_loss(y_hat, y)

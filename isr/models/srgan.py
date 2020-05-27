@@ -180,9 +180,9 @@ class SrGan(LightningIsr):
             return output
 
     def configure_optimizers(self):
-        opt_g = self.generator.configure_optimizers()
+        opt_g, = self.generator.configure_optimizers()
         opt_d = self.discriminator.configure_optimizers()
-        return [opt_g, opt_d], []
+        return [opt_g[-1], opt_d], []
 
     def on_epoch_end(self):
         sample_input, _ = next(iter(self.trainer.val_dataloaders[-1]))
