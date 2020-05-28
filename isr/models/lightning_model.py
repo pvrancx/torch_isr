@@ -10,6 +10,7 @@ from torchvision.transforms import transforms
 
 from isr.datasets.isr import IsrDataset
 from isr.datasets.srsets import load_set5, load_set14
+from isr.losses import pixel_loss, FeatureLoss
 
 
 def psnr(batch1, batch2):
@@ -24,6 +25,10 @@ class LightningIsr(LightningModule):
         self.hparams = hparams
         self.in_channels = 3 if hparams.img_mode == 'RGB' else 1
 
+        loss_name = hparams.loss.lower()
+        assert loss_name in ['pixel', 'feature']
+        self.loss_fn = pixel_loss if loss_name == 'pixel' else FeatureLoss()
+
     @property
     def scale_factor(self) -> int:
         return self.hparams.scale_factor
@@ -31,8 +36,8 @@ class LightningIsr(LightningModule):
     def configure_optimizers(self):
         raise NotImplementedError()
 
-    def pixel_loss(self, y_hat, y):
-        return F.mse_loss(y_hat, y)
+    def loss(self, y_hat, y):
+        return self.loss_fn(y_hat, y)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -42,17 +47,18 @@ class LightningIsr(LightningModule):
             type=str, default='RGB', choices=['RGB', 'yCbCr'],
             help='image mode used by model'
         )
-
+        parser.add_argument('--loss', type=str, default='pixel',
+                            help='loss function - pixel or feature loss')
         parser.add_argument('--lr_epochs', type=int, default=1000,
                             help='epochs over which to decay learning_rate')
         parser.add_argument('--batch_size', type=int, default=32, help='default train batch size')
         parser.add_argument('--scale_factor', type=int, default=2, help='model upscale factor')
         return parser
 
-    def training_step(self, batch, batch_idx, opt_ind):
+    def training_step(self, batch, batch_idx, *args, **kwargs):
         x, y = batch
         y_hat = self(x)
-        loss = F.mse_loss(y_hat, y)
+        loss = self.loss(y_hat, y)
 
         tensorboard_logs = {'train_loss': loss}
 
@@ -61,8 +67,8 @@ class LightningIsr(LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        mse = F.mse_loss(y_hat, y)
-        return {'val_loss': mse, 'val_psnr': psnr(y_hat, y)}
+        loss = self.loss(y_hat, y)
+        return {'val_loss': loss, 'val_psnr': psnr(y_hat, y)}
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
@@ -75,8 +81,8 @@ class LightningIsr(LightningModule):
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        mse = F.mse_loss(y_hat, y)
-        return {'test_loss': mse, 'test_psnr': psnr(y_hat, y)}
+        loss = self.loss(y_hat, y)
+        return {'test_loss': loss, 'test_psnr': psnr(y_hat, y)}
 
     def test_epoch_end(self, outputs):
         avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
@@ -124,9 +130,9 @@ class LightningIsr(LightningModule):
         sample_input, _ = next(iter(self.trainer.val_dataloaders[-1]))
         if self.on_gpu:
             sample_input = sample_input.cuda()
-        y_hat = self(sample_input)
-        idx = min(4, y_hat.size(0))
-        grid = torchvision.utils.make_grid([y_hat[i] for i in range(idx)])
+        # log sampled images
+        sample_imgs = self(sample_input)
+        grid = torchvision.utils.make_grid(sample_imgs)
         self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
         current_lr = self.trainer.optimizers[0].param_groups[0]["lr"]

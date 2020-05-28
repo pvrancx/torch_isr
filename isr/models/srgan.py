@@ -141,10 +141,10 @@ class SrGan(LightningIsr):
                 valid = valid.cuda(lr_imgs.device.index)
 
             # adversarial loss is binary cross-entropy
-            pixel_loss = self.pixel_loss(generated_imgs, hr_imgs)
+            img_loss = self.loss(generated_imgs, hr_imgs)
             g_adv_loss = self.adversarial_loss(self.discriminator(generated_imgs), valid)
-            g_loss = pixel_loss + self.hparams.adv_weight * g_adv_loss
-            tqdm_dict = {'g_loss': g_loss, 'g_adv_loss': g_adv_loss, 'g_pixel_loss': pixel_loss}
+            g_loss = img_loss + self.hparams.adv_weight * g_adv_loss
+            tqdm_dict = {'g_loss': g_loss, 'g_adv_loss': g_adv_loss, 'g_img_loss': img_loss}
             output = OrderedDict({
                 'loss': g_loss,
                 'progress_bar': tqdm_dict,
@@ -154,16 +154,13 @@ class SrGan(LightningIsr):
 
         # train discriminator
         if optimizer_idx == 1:
-            # Measure discriminator's ability to classify real from generated samples
 
-            # how well can it label as real?
-            valid = torch.ones(hr_imgs.size(0), 1)
+            valid = torch.ones(hr_imgs.size(0), 1) * 0.9  # label smoothing
             if self.on_gpu:
                 valid = valid.cuda(hr_imgs.device.index)
 
             real_loss = self.adversarial_loss(self.discriminator(hr_imgs), valid)
 
-            # how well can it label as fake?
             fake = torch.zeros(lr_imgs.size(0), 1)
             if self.on_gpu:
               fake = fake.cuda(lr_imgs.device.index)
